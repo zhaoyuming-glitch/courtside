@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script src="/js/jquery-1.8.3.js" ></script>
+    <script src="/js/gamedetails.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COURTSIDE — 比赛详情</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #f4f4f4;
+            --text: #0a0a0a;
+            --accent: #ff1a1a;
+            --card-bg: #ffffff;
+            --border: #0a0a0a;
+            --shadow: 8px 8px 0px rgba(0, 0, 0, 0.06);
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Helvetica Neue", Arial, "PingFang SC", sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ===== 导航栏 ===== */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            background: var(--bg);
+            border-bottom: 3px solid var(--border);
+        }
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 120px;
+        }
+        .nav-back {
+            font-size: 13px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-decoration: none;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border: 3px solid var(--border);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .nav-back:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 4px 4px 0px var(--border);
+        }
+        .nav-center {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 15px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 120px;
+            justify-content: flex-end;
+        }
+        .nav-brand {
+            font-size: 16px;
+            font-weight: 900;
+            letter-spacing: -1px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .nav-brand::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            transform: skewX(-15deg);
+        }
+
+        /* ===== 板块入口标识 ===== */
+        .section-entry {
+            position: relative;
+            padding: 40px 5vw 20px;
+            background: var(--bg);
+            margin-top: 0;
+            overflow: visible;
+            z-index: 1;
+        }
+        .section-entry .entry-title {
+            display: flex;
+            align-items: baseline;
+            gap: 16px;
+            margin-bottom: 10px;
+        }
+        .section-entry .entry-title h2 {
+            font-size: 28px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+            color: var(--text);
+        }
+        .section-entry .entry-title span {
+            font-size: 11px;
+            font-weight: 600;
+            color: #666;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .section-entry .entry-divider {
+            width: 100%;
+            height: 3px;
+            background: var(--border);
+        }
+
+        /* ===== 背景装饰独立容器 ===== */
+        .bg-deco {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: visible;
+        }
+        .bg-deco .bg-en {
+            position: absolute;
+            top: 8%;
+            left: 5%;
+            font-size: 10vw;
+            font-weight: 900;
+            line-height: 0.85;
+            letter-spacing: -0.04em;
+            text-transform: uppercase;
+            color: rgba(10, 10, 10, 0.08);
+            transform: skewX(-6deg);
+        }
+        .bg-deco .bg-icon {
+            position: absolute;
+            top: -5%;
+            right: 5%;
+            width: 16vw;
+            height: 16vw;
+            color: rgba(10, 10, 10, 0.08);
+            transform: rotate(8deg);
+        }
+        .bg-deco .bg-icon svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* ===== 主容器 ===== */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 40px 100px;
+        }
+
+        /* ===== 比分大屏 ===== */
+        .scoreboard {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 0 30px;
+            gap: 60px;
+            border-bottom: 3px solid var(--border);
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+        }
+        .sb-team {
+            flex: 0 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            min-width: 140px;
+        }
+        .sb-emoji {
+            font-size: 56px;
+            line-height: 1;
+        }
+        .sb-name {
+            font-size: 18px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .sb-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            min-width: 280px;
+        }
+
+        .sb-scores {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            width: 100%;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .sb-score {
+            font-size: 140px;
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: -4px;
+            font-style: italic;
+            color: var(--text);
+        }
+
+        .sb-score.leading {
+            color: var(--accent);
+            text-shadow: 0 0 20px rgba(255, 26, 26, 0.3);
+        }
+
+        .sb-vs {
+            font-size: 32px;
+            font-weight: 900;
+            color: #ccc;
+            font-style: italic;
+        }
+        .sb-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--accent);
+            color: white;
+            padding: 6px 20px;
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            transform: skewX(-10deg);
+            border: 3px solid var(--border);
+            box-shadow: 4px 4px 0px var(--border);
+        }
+        .sb-status.final {
+            background: #666;
+        }
+        .sb-status.scheduled {
+            background: #999;
+        }
+        .sb-status>span {
+            transform: skewX(10deg);
+            display: inline-block;
+        }
+
+        /* ===== Tab 导航 ===== */
+        .tabs {
+            display: flex;
+            border-bottom: 3px solid var(--border);
+            margin-bottom: 30px;
+        }
+        .tab-btn {
+            padding: 14px 28px;
+            font-size: 13px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: transparent;
+            border: none;
+            border-right: 3px solid var(--border);
+            font-family: inherit;
+            color: var(--text);
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        .tab-btn:last-child {
+            border-right: none;
+        }
+        .tab-btn:hover {
+            background: rgba(0, 0, 0, 0.04);
+        }
+        .tab-btn.active {
+            background: var(--text);
+            color: var(--bg);
+            box-shadow: inset 0 -4px 0 var(--accent);
+        }
+
+        .tab-content {
+            display: none;
+        }
+        #tab-players {
+            display: block;
+        }
+
+        /* ===== 球员数据 ===== */
+        .roster-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+        .roster-col-header {
+            font-size: 24px;
+            font-weight: 900;
+            text-transform: uppercase;
+            padding-bottom: 16px;
+            border-bottom: 3px solid var(--border);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .player-card {
+            background: var(--card-bg);
+            border: 3px solid var(--border);
+            padding: 20px;
+            margin-bottom: 16px;
+            display: grid;
+            grid-template-columns: 50px 1fr auto;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .player-card:hover {
+            transform: translate(-3px, -3px);
+            box-shadow: 6px 6px 0px var(--border);
+        }
+        .player-avatar {
+            font-size: 36px;
+            text-align: center;
+        }
+        .player-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .player-name {
+            font-size: 16px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        .player-pos {
+            font-size: 10px;
+            font-weight: 900;
+            background: var(--text);
+            color: var(--bg);
+            padding: 2px 8px;
+            width: fit-content;
+            transform: skewX(-10deg);
+        }
+        .player-stats {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            font-weight: 800;
+            color: #555;
+            font-variant-numeric: tabular-nums;
+        }
+        .player-stats span {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+        .player-stats strong {
+            font-size: 16px;
+            color: var(--text);
+        }
+        .player-rate {
+            font-size: 10px;
+            font-weight: 900;
+            color: var(--accent);
+            text-transform: uppercase;
+            border: 2px solid var(--accent);
+            padding: 4px 8px;
+            transform: skewX(-10deg);
+            white-space: nowrap;
+        }
+
+        /* ===== 技术统计 ===== */
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card-bg);
+            border: 3px solid var(--border);
+        }
+        .stats-table th,
+        .stats-table td {
+            padding: 16px 24px;
+            text-align: center;
+            border-bottom: 3px solid var(--border);
+            border-right: 3px solid var(--border);
+            font-size: 14px;
+            font-weight: 800;
+        }
+        .stats-table th:last-child,
+        .stats-table td:last-child {
+            border-right: none;
+        }
+        .stats-table tr:last-child td {
+            border-bottom: none;
+        }
+        .stats-table th {
+            background: var(--text);
+            color: var(--bg);
+            font-size: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .stats-table td:first-child {
+            text-align: left;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .stat-win {
+            color: var(--accent);
+            font-weight: 900;
+            font-size: 16px;
+        }
+
+        /* ===== AI 赛况 ===== */
+        .recap-content {
+            background: var(--card-bg);
+            border: 3px solid var(--border);
+            padding: 50px 60px;
+            box-shadow: var(--shadow);
+        }
+        .recap-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 18px;
+            border-bottom: 3px solid var(--border);
+            margin-bottom: 28px;
+        }
+        .recap-header-title {
+            font-size: 24px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .recap-para {
+            font-size: 15px;
+            line-height: 1.9;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 18px;
+            text-indent: 2em;
+        }
+        .recap-para:last-child {
+            margin-bottom: 0;
+        }
+        .recap-footer {
+            margin-top: 28px;
+            padding-top: 18px;
+            border-top: 2px solid var(--bg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .recap-meta {
+            font-size: 11px;
+            font-weight: 700;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn-regenerate {
+            padding: 8px 20px;
+            background: var(--text);
+            color: var(--bg);
+            border: 3px solid var(--border);
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .btn-regenerate:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 4px 4px 0px var(--border);
+        }
+        .recap-loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        .recap-loading .ball {
+            font-size: 48px;
+            display: inline-block;
+            animation: bounce 1s ease-in-out infinite;
+        }
+        .recap-loading .text {
+            font-size: 13px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-top: 12px;
+        }
+
+        /* ===== 页脚 ===== */
+        .footer {
+            border-top: 3px solid var(--border);
+            padding: 40px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            background: var(--text);
+            color: var(--bg);
+            margin-top: 80px;
+        }
+
+        @media (max-width: 900px) {
+            .top-nav {
+                padding: 0 20px;
+            }
+            .nav-center {
+                font-size: 11px;
+                position: static;
+                transform: none;
+                flex: 1;
+                text-align: center;
+            }
+            .nav-left {
+                min-width: auto;
+            }
+            .nav-right {
+                min-width: auto;
+            }
+            .nav-back {
+                font-size: 11px;
+                padding: 4px 12px;
+            }
+            .container {
+                padding: 0 20px 60px;
+            }
+            .scoreboard {
+                flex-direction: column;
+                gap: 20px;
+                padding: 30px 0 20px;
+            }
+            .sb-scores {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 12px;
+                width: 100%;
+            }
+            .sb-score {
+                font-size: 80px;
+                letter-spacing: -2px;
+            }
+            .sb-emoji {
+                font-size: 40px;
+            }
+            .tab-btn {
+                font-size: 11px;
+                padding: 12px 16px;
+            }
+            .roster-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            .player-card {
+                grid-template-columns: 40px 1fr;
+            }
+            .player-stats {
+                grid-column: span 2;
+                margin-top: 10px;
+                flex-wrap: wrap;
+            }
+            .player-rate {
+                grid-column: span 2;
+                width: fit-content;
+                margin-top: 10px;
+            }
+            .stats-table th,
+            .stats-table td {
+                padding: 10px 8px;
+                font-size: 12px;
+            }
+            .recap-content {
+                padding: 30px 20px;
+            }
+            .section-entry .entry-title h2 {
+                font-size: 20px;
+            }
+            .bg-deco .bg-icon {
+                width: 22vw;
+                height: 22vw;
+            }
+            .bg-deco .bg-en {
+                font-size: 14vw;
+            }
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+    </style>
+</head>
+<body>
+<div id="loadingWrapper" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: var(--bg);
+    z-index: 999;">
+    <div style="font-size:64px; animation: bounce 1s ease-in-out infinite;">🏀</div>
+    <div style="font-size:16px; font-weight:900; text-transform:uppercase; letter-spacing:4px; color:#999; margin-top:16px;">
+        加载比赛数据...
+    </div>
+</div>
+
+<div id="pageContent" style="display:none;">
+    <nav class="top-nav">
+        <div class="nav-left">
+            <a href="javascript:history.back()" class="nav-back">← 返回</a>
+        </div>
+        <div class="nav-center">
+            <span class="nav-title">勇士 VS 湖人</span>
+        </div>
+        <div class="nav-right">
+            <span class="nav-brand">Courtside</span>
+        </div>
+    </nav>
+
+    <!-- ===== 板块入口标识 ===== -->
+    <section class="section-entry" style="margin-top:0; position:relative; overflow:visible;">
+        <div class="bg-deco">
+            <div class="bg-en">DETAIL</div>
+            <div class="bg-icon">
+                <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="10" y="10" width="80" height="65" rx="4" stroke="currentColor" stroke-width="4"/>
+                    <path d="M10 40 H90 M10 55 H90" stroke="currentColor" stroke-width="3"/>
+                    <path d="M70 10 V75 M35 10 V75" stroke="currentColor" stroke-width="2"/>
+                    <circle cx="50" cy="50" r="6" fill="currentColor"/>
+                </svg>
+            </div>
+        </div>
+        <div class="entry-title">
+            <h2>比赛详情</h2>
+            <span>实时 · 数据 · 回顾</span>
+        </div>
+        <div class="entry-divider"></div>
+    </section>
+
+    <div class="container">
+
+        <header class="scoreboard">
+            <div class="sb-team">
+                <div class="sb-emoji">🟡</div>
+                <div class="sb-name">金州勇士</div>
+            </div>
+            <div class="sb-center">
+                <div class="sb-scores">
+                    <div class="sb-score">102</div>
+                    <div class="sb-vs">VS</div>
+                    <div class="sb-score leading">108</div>
+                </div>
+                <div class="sb-status">
+                    <span>LIVE · Q4 04:32</span>
+                </div>
+            </div>
+            <div class="sb-team">
+                <div class="sb-emoji">🟣</div>
+                <div class="sb-name">洛杉矶湖人</div>
+            </div>
+        </header>
+
+        <!-- ===== Tab 导航 ===== -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="players">球员数据</button>
+            <button class="tab-btn" data-tab="stats">技术统计</button>
+            <button class="tab-btn" data-tab="recap">AI 赛况</button>
+        </div>
+
+        <!-- ===== 球员数据 Tab ===== -->
+        <div id="tab-players" class="tab-content">
+            <div class="roster-grid">
+                <div class="roster-col">
+                    <div class="roster-col-header" id="homeRosterTitle">🏠 主队</div>
+                    <div id="homePlayerList"></div>
+                </div>
+                <div class="roster-col">
+                    <div class="roster-col-header" id="visitorRosterTitle">✈️ 客队</div>
+                    <div id="visitorPlayerList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 技术统计 Tab ===== -->
+        <div id="tab-stats" class="tab-content">
+            <table class="stats-table">
+                <thead>
+                <tr>
+                    <th>数据项</th>
+                    <th id="homeTeamHeader">🟡 主队</th>
+                    <th id="visitorTeamHeader">🟣 客队</th>
+                </tr>
+                </thead>
+                <tbody id="statsBody">
+                <tr>
+                    <td>投篮命中率</td>
+                    <td id="homeFgPct">--</td>
+                    <td id="visitorFgPct">--</td>
+                </tr>
+                <tr>
+                    <td>三分命中率</td>
+                    <td id="homeFg3Pct">--</td>
+                    <td id="visitorFg3Pct">--</td>
+                </tr>
+                <tr>
+                    <td>罚球命中率</td>
+                    <td id="homeFtPct">--</td>
+                    <td id="visitorFtPct">--</td>
+                </tr>
+                <tr>
+                    <td>篮板</td>
+                    <td id="homeReb">--</td>
+                    <td id="visitorReb">--</td>
+                </tr>
+                <tr>
+                    <td>助攻</td>
+                    <td id="homeAst">--</td>
+                    <td id="visitorAst">--</td>
+                </tr>
+                <tr>
+                    <td>抢断</td>
+                    <td id="homeStl">--</td>
+                    <td id="visitorStl">--</td>
+                </tr>
+                <tr>
+                    <td>盖帽</td>
+                    <td id="homeBlk">--</td>
+                    <td id="visitorBlk">--</td>
+                </tr>
+                <tr>
+                    <td>失误</td>
+                    <td id="homeTurnover">--</td>
+                    <td id="visitorTurnover">--</td>
+                </tr>
+                <tr>
+                    <td>犯规</td>
+                    <td id="homePf">--</td>
+                    <td id="visitorPf">--</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ===== AI 赛况 Tab ===== -->
+        <div id="tab-recap" class="tab-content">
+            <div class="recap-content">
+                <div class="recap-header">
+                    <div class="recap-header-title">📝 AI 赛况</div>
+                </div>
+                <div id="recapBody">
+                    <div class="recap-loading">
+                        <div class="ball">🏀</div>
+                        <div class="text">AI 生成中...</div>
+                    </div>
+                </div>
+                <div class="recap-footer">
+                    <span class="recap-meta">🤖 AI 生成 · 仅供参考</span>
+                    <button class="btn-regenerate" id="regenerateRecap">🔄 重新生成</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <footer class="footer">
+        <span>© 2026 COURTSIDE</span>
+        <span>不止于篮球</span>
+    </footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script src="/js/jquery-1.8.3.js"></script>
+    <script src="/js/index.js"></script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COURTSIDE — 篮球社区</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #f4f4f4;
+            --text: #0a0a0a;
+            --accent: #ff1a1a;
+            --card-bg: #ffffff;
+            --border: #0a0a0a;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Helvetica Neue", Arial, "PingFang SC", sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        /* ===== 导航栏 ===== */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            background: var(--bg);
+            border-bottom: 3px solid var(--border);
+        }
+        .nav-logo {
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: -1px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .nav-logo::before {
+            content: '';
+            width: 12px;
+            height: 12px;
+            background: var(--accent);
+            transform: skewX(-15deg);
+        }
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text);
+            padding: 4px 0;
+            border-bottom: 3px solid transparent;
+            transition: border-color 0.1s;
+        }
+        .nav-links a:hover {
+            border-bottom-color: var(--text);
+        }
+        .nav-links a.active {
+            border-bottom-color: var(--accent);
+        }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .nav-search {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        .nav-post {
+            padding: 6px 16px;
+            background: var(--text);
+            color: var(--bg);
+            border: 3px solid var(--border);
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: transform 0.1s;
+        }
+        .nav-post:hover {
+            transform: translate(-2px, -2px);
+        }
+        .nav-avatar {
+            width: 36px;
+            height: 36px;
+            background: var(--text);
+            color: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 14px;
+            cursor: pointer;
+            border: 3px solid var(--border);
+            user-select: none;
+        }
+
+        /* ===== 用户菜单 ===== */
+        .nav-user-menu {
+            display: none;
+            position: fixed;
+            top: 60px;
+            right: 40px;
+            background: #fff;
+            border: 3px solid var(--border);
+            box-shadow: 6px 6px 0 rgba(0,0,0,0.1);
+            z-index: 200;
+            min-width: 140px;
+        }
+        .nav-user-menu.show {
+            display: block;
+        }
+        .nav-user-menu a {
+            display: block;
+            padding: 10px 18px;
+            font-size: 13px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-decoration: none;
+            color: var(--text);
+            border-bottom: 2px solid var(--bg);
+            transition: background 0.1s;
+        }
+        .nav-user-menu a:last-child {
+            border-bottom: none;
+        }
+        .nav-user-menu a:hover {
+            background: var(--bg);
+        }
+
+        /* ===== 板块入口标识 ===== */
+        .section-entry {
+            position: relative;
+            padding: 40px 5vw 20px;
+            background: var(--bg);
+            margin-top: 60px;
+            overflow: visible;
+            z-index: 1;
+        }
+        .section-entry .entry-title {
+            display: flex;
+            align-items: baseline;
+            gap: 16px;
+            margin-bottom: 10px;
+        }
+        .section-entry .entry-title h2 {
+            font-size: 28px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+            color: var(--text);
+        }
+        .section-entry .entry-title span {
+            font-size: 11px;
+            font-weight: 600;
+            color: #666;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .section-entry .entry-divider {
+            width: 100%;
+            height: 3px;
+            background: var(--border);
+        }
+
+        /* ===== 背景装饰 ===== */
+        .bg-deco {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: visible;
+        }
+        .bg-deco .bg-en {
+            position: absolute;
+            top: 8%;
+            left: 5%;
+            font-size: 10vw;
+            font-weight: 900;
+            line-height: 0.85;
+            letter-spacing: -0.04em;
+            text-transform: uppercase;
+            color: rgba(10, 10, 10, 0.08);
+            transform: skewX(-6deg);
+        }
+        .bg-deco .bg-icon {
+            position: absolute;
+            top: -5%;
+            right: 5%;
+            width: 16vw;
+            height: 16vw;
+            color: rgba(10, 10, 10, 0.08);
+            transform: rotate(8deg);
+        }
+        .bg-deco .bg-icon svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* ===== Hero 区 ===== */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 0 5vw 60px;
+            background: var(--bg);
+            overflow: visible;
+        }
+
+        /* ===== 默认隐藏所有动态内容 ===== */
+        .hero-tagline,
+        .score-strip,
+        .secondary-scores,
+        .no-game-placeholder {
+            display: none !important;
+        }
+
+        /* ===== 有比赛时显示比赛内容 ===== */
+        .hero.has-games .hero-tagline {
+            display: flex !important;
+        }
+        .hero.has-games .score-strip {
+            display: flex !important;
+        }
+        .hero.has-games .secondary-scores {
+            display: grid !important;
+        }
+
+        /* ===== 无比赛时只显示占位 ===== */
+        .hero.no-games .no-game-placeholder {
+            display: block !important;
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        /* ===== 加载完成后隐藏加载动画 ===== */
+        .hero.loaded .loading-spinner {
+            display: none !important;
+        }
+
+        /* ===== 加载动画本身默认显示 ===== */
+        .loading-spinner {
+            text-align: center;
+            padding: 80px 20px;
+            display: block;
+        }
+
+        .loading-spinner .ball {
+            font-size: 64px;
+            display: inline-block;
+            animation: bounce 1s ease-in-out infinite;
+        }
+
+        .loading-spinner .text {
+            font-size: 16px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: #999;
+            margin-top: 16px;
+        }
+
+        .loading-spinner .dots::after {
+            content: '';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes dots {
+            0% { content: ''; }
+            25% { content: '.'; }
+            50% { content: '..'; }
+            75% { content: '...'; }
+        }
+
+        /* ===== 顶部标签 ===== */
+        .hero-tagline {
+            font-size: 2vw;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 16px 0 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transform: skewX(-12deg);
+        }
+
+        .hero-tag {
+            padding: 8px 24px;
+            background: var(--accent);
+            color: white;
+            font-size: 1.2vw;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+        .hero-tag.final {
+            background: #666;
+        }
+        .hero-tag.upcoming {
+            background: #999;
+        }
+
+        /* ===== 大比分 ===== */
+        .score-strip {
+            display: flex;
+            border-top: 3px solid var(--border);
+            border-bottom: 3px solid var(--border);
+            background: var(--bg);
+            box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.06);
+            margin-top: 20px;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .score-strip:hover {
+            transform: translateY(-3px);
+            box-shadow: 8px 12px 0px rgba(0, 0, 0, 0.08);
+        }
+
+        .score-block {
+            flex: 1;
+            padding: 30px 5vw;
+            border-right: 3px solid var(--border);
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background 0.15s;
+        }
+
+        .score-strip:hover .score-block {
+            background: rgba(0, 0, 0, 0.02);
+        }
+        .score-block:last-child {
+            border-right: none;
+        }
+        .team-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .team-name {
+            font-size: 24px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        .team-record {
+            font-size: 11px;
+            font-weight: 900;
+            color: #666;
+            letter-spacing: 1px;
+        }
+        .score-num {
+            font-size: 140px;
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: -4px;
+            font-style: italic;
+            color: var(--text);
+        }
+        .score-num.win {
+            color: var(--accent);
+            text-shadow: 0 0 20px rgba(255, 26, 26, 0.3);
+        }
+
+        /* ===== 三张小卡片 ===== */
+        .secondary-scores {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .sec-card {
+            background: rgba(0, 0, 0, 0.02);
+            border: 1.5px solid rgba(0, 0, 0, 0.08);
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transition: transform 0.15s;
+            cursor: pointer;
+        }
+        .sec-card:hover {
+            transform: translateY(-2px);
+            background: rgba(0, 0, 0, 0.04);
+        }
+        .sec-teams {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #666;
+        }
+        .sec-team-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .sec-team-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .sec-score {
+            font-size: 16px;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            color: #333;
+        }
+        .sec-score.leading {
+            color: var(--accent);
+        }
+        .sec-vs {
+            color: #ccc;
+            font-weight: 400;
+            font-size: 11px;
+            margin: 0 4px;
+        }
+        .sec-status {
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 2px 10px;
+            border: 1.5px solid rgba(0, 0, 0, 0.1);
+            transform: skewX(-6deg);
+            text-align: center;
+            margin-top: 4px;
+            width: fit-content;
+            align-self: center;
+            color: #999;
+        }
+        .sec-status.live {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        .sec-status.final {
+            color: #aaa;
+            border-color: #ddd;
+        }
+        .sec-status.upcoming {
+            color: #999;
+            border-color: #ccc;
+        }
+        .sec-card .team-name {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        /* ===== 内容区 ===== */
+        .content-zone {
+            position: relative;
+            padding: 60px 5vw 100px;
+            background: var(--bg);
+            overflow: visible;
+        }
+
+        .headline-card {
+            position: relative;
+            width: 100%;
+            min-height: 500px;
+            background: var(--card-bg);
+            border: 3px solid var(--border);
+            padding: 60px;
+            margin-bottom: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            overflow: hidden;
+            z-index: 1;
+        }
+        .headline-bg-text {
+            position: absolute;
+            top: -40px;
+            right: -20px;
+            font-size: 280px;
+            font-weight: 900;
+            color: transparent;
+            -webkit-text-stroke: 3px var(--border);
+            opacity: 0.2;
+            line-height: 1;
+            text-transform: uppercase;
+            pointer-events: none;
+        }
+        .headline-tag {
+            display: inline-block;
+            padding: 8px 20px;
+            background: var(--accent);
+            color: white;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transform: skewX(-15deg);
+            margin-bottom: 24px;
+            width: fit-content;
+        }
+        .headline-title {
+            font-size: 56px;
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: -2px;
+            text-transform: uppercase;
+            max-width: 800px;
+            margin-bottom: 20px;
+        }
+        .headline-meta {
+            font-size: 14px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .headline-player {
+            position: absolute;
+            right: 60px;
+            bottom: 0;
+            font-size: 300px;
+            line-height: 1;
+            z-index: 2;
+        }
+
+        .post-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            position: relative;
+            z-index: 1;
+        }
+        .post-item {
+            position: relative;
+            background: var(--card-bg);
+            border: 3px solid var(--border);
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .post-item:hover {
+            transform: translate(-4px, -4px);
+            box-shadow: 12px 12px 0px var(--border);
+        }
+        .post-item.featured {
+            grid-column: span 2;
+            flex-direction: row;
+            align-items: center;
+            gap: 60px;
+        }
+        .post-number {
+            font-size: 120px;
+            font-weight: 900;
+            line-height: 1;
+            color: transparent;
+            -webkit-text-stroke: 3px var(--border);
+            position: absolute;
+            top: -20px;
+            right: 20px;
+        }
+        .post-tag {
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border: 3px solid var(--border);
+            padding: 4px 12px;
+            width: fit-content;
+            margin-bottom: 20px;
+            transform: skewX(-10deg);
+        }
+        .post-title {
+            font-size: 32px;
+            font-weight: 900;
+            line-height: 1.2;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+        }
+        .post-item.featured .post-title {
+            font-size: 48px;
+            flex: 1;
+        }
+        .post-footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 3px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .footer {
+            border-top: 3px solid var(--border);
+            padding: 40px 5vw;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            background: var(--text);
+            color: var(--bg);
+            margin-top: 100px;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 900px) {
+            .score-strip {
+                flex-direction: column;
+            }
+            .score-block {
+                border-right: none;
+                border-bottom: 3px solid var(--border);
+                padding: 20px 5vw;
+            }
+            .score-num {
+                font-size: 80px;
+                letter-spacing: -2px;
+            }
+            .secondary-scores {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            .post-grid {
+                grid-template-columns: 1fr;
+            }
+            .post-item.featured {
+                grid-column: span 1;
+                flex-direction: column;
+            }
+            .headline-title {
+                font-size: 36px;
+            }
+            .headline-player {
+                font-size: 150px;
+                right: 10px;
+                opacity: 0.5;
+            }
+            .hero-tagline {
+                font-size: 4vw;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .nav {
+                padding: 0 20px;
+            }
+            .nav-links {
+                gap: 16px;
+                font-size: 10px;
+            }
+            .section-entry .entry-title h2 {
+                font-size: 20px;
+            }
+            .bg-deco .bg-icon {
+                width: 25vw;
+                height: 25vw;
+            }
+            .bg-deco .bg-en {
+                font-size: 14vw;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="nav">
+    <div class="nav-logo">Courtside</div>
+    <div class="nav-links">
+        <a href="index" class="active">首页</a>
+        <a href="/schedule">赛程</a>
+    </div>
+    <div class="nav-actions">
+        <button class="nav-search">🔍</button>
+        <button class="nav-post">+ 发帖</button>
+        <div class="nav-avatar" id="navAvatar">K</div>
+        <div class="nav-user-menu" id="navUserMenu">
+            <a href="/login.html">登录</a>
+            <a href="/register.html">注册</a>
+            <a href="/logout">退出登录</a>
+        </div>
+    </div>
+</nav>
+
+<!-- ===== 板块一：近期比赛 ===== -->
+<section class="section-entry" style="margin-top:60px; position:relative; overflow:visible;">
+    <div class="bg-deco">
+        <div class="bg-en">GAME</div>
+        <div class="bg-icon">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="46" stroke="currentColor" stroke-width="4"/>
+                <path d="M4 50 H96 M50 4 V96" stroke="currentColor" stroke-width="3"/>
+                <path d="M22 12 C40 30 40 70 22 88" stroke="currentColor" stroke-width="3" fill="none"/>
+                <path d="M78 12 C60 30 60 70 78 88" stroke="currentColor" stroke-width="3" fill="none"/>
+            </svg>
+        </div>
+    </div>
+    <div class="entry-title">
+        <h2>近期比赛</h2>
+        <span>最新 · 焦点 · 直接</span>
+    </div>
+    <div class="entry-divider"></div>
+</section>
+
+<section class="hero">
+    <!-- ===== 加载动画 ===== -->
+    <div class="loading-spinner">
+        <div class="ball">🏀</div>
+        <div class="text">加载中<span class="dots"></span></div>
+    </div>
+
+    <!-- ===== 无比赛占位 ===== -->
+    <div class="no-game-placeholder">
+        <div style="font-size:80px; margin-bottom:20px;">🏀</div>
+        <h2 style="font-size:32px; font-weight:900; text-transform:uppercase; letter-spacing:-1px;">今日暂无比赛</h2>
+        <p style="font-size:16px; font-weight:700; color:#999; margin-top:12px;">去看看往期精彩吧</p>
+        <div style="margin-top:30px; display:flex; gap:20px; justify-content:center; flex-wrap:wrap;">
+            <a href="/schedule" style="padding:12px 32px; background:#0a0a0a; color:#fff; font-weight:900; font-size:14px; text-transform:uppercase; text-decoration:none; border:3px solid #0a0a0a; transition:0.2s;">📅 更多赛程</a>
+            <a href="#talk-section" style="padding:12px 32px; background:transparent; color:#0a0a0a; font-weight:900; font-size:14px; text-transform:uppercase; text-decoration:none; border:3px solid #0a0a0a; transition:0.2s;">💬 场边热议</a>
+        </div>
+    </div>
+
+    <!-- ===== 有比赛内容 ===== -->
+    <div class="hero-tagline">
+        <span class="hero-tag">LIVE MATCH</span>
+        <span class="hero-info">湖人 VS 勇士 · 第四节 04:32</span>
+    </div>
+
+    <div class="score-strip">
+        <div class="score-block">
+            <div class="team-info">
+                <div class="team-name">洛杉矶湖人</div>
+            </div>
+            <div class="score-num win">108</div>
+        </div>
+        <div class="score-block">
+            <div class="team-info">
+                <div class="team-name">金州勇士</div>
+            </div>
+            <div class="score-num">102</div>
+        </div>
+    </div>
+
+    <div class="secondary-scores">
+        <div class="sec-card">
+            <div class="sec-teams">
+                    <span class="sec-team-left">
+                        <span class="team-name">凯尔特人</span>
+                        <span class="sec-score leading">112</span>
+                    </span>
+                <span class="sec-vs">VS</span>
+                <span class="sec-team-right">
+                        <span class="sec-score">105</span>
+                        <span class="team-name">热火</span>
+                    </span>
+            </div>
+            <div class="sec-status final">FINAL</div>
+        </div>
+        <div class="sec-card">
+            <div class="sec-teams">
+                    <span class="sec-team-left">
+                        <span class="team-name">太阳</span>
+                        <span class="sec-score">88</span>
+                    </span>
+                <span class="sec-vs">VS</span>
+                <span class="sec-team-right">
+                        <span class="sec-score leading">94</span>
+                        <span class="team-name">掘金</span>
+                    </span>
+            </div>
+            <div class="sec-status live">LIVE Q3</div>
+        </div>
+        <div class="sec-card">
+            <div class="sec-teams">
+                    <span class="sec-team-left">
+                        <span class="team-name">快船</span>
+                        <span class="sec-score">-</span>
+                    </span>
+                <span class="sec-vs">VS</span>
+                <span class="sec-team-right">
+                        <span class="sec-score">-</span>
+                        <span class="team-name">独行侠</span>
+                    </span>
+            </div>
+            <div class="sec-status upcoming">20:30</div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== 板块二：场边热议 ===== -->
+<section class="section-entry" id="talk-section" style="margin-top:0; position:relative; overflow:visible;">
+    <div class="bg-deco">
+        <div class="bg-en">TALK</div>
+        <div class="bg-icon">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20 75 C10 75 5 65 10 55 C4 48 6 35 15 30 C14 20 22 12 35 12 C42 6 58 6 65 12 C78 12 86 20 85 30 C94 35 96 48 90 55 C95 65 90 75 80 75 L60 75 L45 90 L48 75 Z"
+                      fill="currentColor"/>
+            </svg>
+        </div>
+    </div>
+    <div class="entry-title">
+        <h2>场边热议</h2>
+        <span>最新 · 最热 · 直接</span>
+    </div>
+    <div class="entry-divider"></div>
+</section>
+
+<section class="content-zone">
+    <article class="headline-card">
+        <div class="headline-bg-text">MVP</div>
+        <div class="headline-player">🦍</div>
+        <div style="position: relative; z-index: 1;">
+            <div class="headline-tag">独家深度</div>
+            <h3 class="headline-title">湖人交易流言汇总：管理层正在积极寻求补强方案</h3>
+            <div class="headline-meta">篮球前线 · 3小时前 · 🔥 3.4w 阅读</div>
+        </div>
+    </article>
+
+    <div class="post-grid">
+        <article class="post-item featured">
+            <div class="post-number">01</div>
+            <div style="font-size: 120px; line-height: 1;">🎙️</div>
+            <div style="flex: 1;">
+                <div class="post-tag">Interview</div>
+                <h4 class="post-title">东契奇独家专访：谈MVP之争与季后赛目标</h4>
+                <div class="post-footer">
+                    <span>斯洛文尼亚天才敞开心扉...</span>
+                    <span>♥ 2.3k</span>
+                </div>
+            </div>
+        </article>
+        <article class="post-item">
+            <div class="post-number">02</div>
+            <div class="post-tag">Trade</div>
+            <h4 class="post-title">交易截止日前瞻：12名球员可能被交易</h4>
+            <div class="post-footer">
+                <span>交易专家</span>
+                <span>💬 128</span>
+            </div>
+        </article>
+        <article class="post-item">
+            <div class="post-number">03</div>
+            <div class="post-tag">Highlight</div>
+            <h4 class="post-title">文班亚马赛季防守集锦：禁区守护神</h4>
+            <div class="post-footer">
+                <span>马刺观察</span>
+                <span>♥ 5.6w</span>
+            </div>
+        </article>
+    </div>
+</section>
+
+<footer class="footer">
+    <span>© 2026 COURTSIDE</span>
+    <span>不止于篮球</span>
+</footer>
+
+</body>
+</html>

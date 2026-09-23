@@ -1,0 +1,29 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: courtside
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/courtside?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: 352571263
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: 192.168.189.130
+      port: 6379
+
+nba:
+  api:
+    base-url: https://api.balldontlie.io/v1
+    key: 4a403d1f-9845-48a8-9aa5-b6a719398bde
+ai:
+  api:
+    url: https://api.deepseek.com/chat/completions
+    key: sk-475c0c4fa71f4a0dab1ac8104e51ae65
+    model: deepseek-chat
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.jr.entity
+  configuration:
+    map-underscore-to-camel-case: false
