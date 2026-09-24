@@ -16,11 +16,11 @@ spring:
 nba:
   api:
     base-url: https://api.balldontlie.io/v1
-    key: 4a403d1f-9845-48a8-9aa5-b6a719398bde
+    key: 
 ai:
   api:
     url: https://api.deepseek.com/chat/completions
-    key: sk-475c0c4fa71f4a0dab1ac8104e51ae65
+    key: 
     model: deepseek-chat
 mybatis:
   mapper-locations: classpath:mapper/*.xml
